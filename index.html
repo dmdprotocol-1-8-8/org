@@ -12,10 +12,10 @@
     <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; connect-src https://base.llamarpc.com https://mainnet.base.org https://*.base.org wss://*.base.org https://base-mainnet.public.blastapi.io https://base.drpc.org https://rpc.ankr.com http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; img-src 'self' data: https:; frame-ancestors 'none'; form-action 'self'; base-uri 'self';">
 
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link rel="preconnect" href="https://base.llamarpc.com">
     <link rel="preconnect" href="https://basescan.org">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js" as="script">
+    <script defer src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <style>
         :root {
             --primary: #3b82f6;
@@ -36,7 +36,7 @@
             --radius-sm: 6px;
             --radius-md: 8px;
             --radius-lg: 12px;
-            --transition: all 0.3s ease;
+            --transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease, color 0.3s ease, opacity 0.3s ease;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -113,7 +113,7 @@
         .btn-primary { background: var(--gradient-primary); color: var(--text); }
         .btn-secondary { background: var(--gradient-secondary); color: var(--text); }
         .btn-danger { background: var(--error); color: var(--text); }
-        .btn:hover { transform: translateY(-2px); }
+        .btn:hover { transform: translateY(-2px); will-change: transform; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
         .btn.loading { position: relative; color: transparent !important; }
         .btn.loading::after {
@@ -169,8 +169,8 @@
         }
         .tab:hover { color: var(--text); transform: translateY(-1px); }
         .tab.active { background: var(--gradient-primary); border-color: transparent; color: var(--text); }
-        .tab-content { display: none; animation: fadeIn 0.3s ease; }
-        .tab-content.active { display: block; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; content-visibility: auto; }
         .grid-2-col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .grid-3-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         @media (max-width: 900px) { .grid-2-col, .grid-3-col { grid-template-columns: 1fr; } }
@@ -180,6 +180,7 @@
             border-radius: var(--radius-md);
             padding: 8px 10px;
             transition: var(--transition);
+            contain: layout style;
         }
         .card:hover { transform: translateY(-2px); border-color: var(--border-light); }
         .card h3 {
@@ -450,13 +451,6 @@
         }</style>
 </head>
 <body>
-    <div id="securityBanner" style="background: linear-gradient(90deg, #1e3a8a, #3b82f6); padding: 4px 12px; text-align: center; font-size: 0.78rem; display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
-        <span style="color: #fbbf24;">&#9888;</span>
-        <span style="color: var(--text);">Always verify you are on the official site - https://dmdprotocol.org . Never share your seed phrase.</span>
-        <span style="background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 4px; font-family: monospace; color: #93c5fd;" id="currentDomain"></span>
-        <button onclick="dismissSecurityBanner()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: var(--text); padding: 2px 10px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Dismiss</button>
-    </div>
-
     <header>
         <div class="container">
             <div class="header-content">
@@ -542,26 +536,41 @@
                 <div class="card">
                     <h3>Resources</h3>
                     <div style="display: flex; flex-direction: column; gap: 3px;">
-                        <a href="https://github.com/dedrxyz-DMD/dmd-protocol-1.8.8/blob/main/User%20Guide.md" target="_blank" rel="noopener noreferrer" class="resource-link">
+                        <a href="https://github.com/dmdprotocol-1-8-8/root/blob/25baf9a2f745eb92111df83717c71a2222e74088/User%20Guide.md" target="_blank" rel="noopener noreferrer" class="resource-link">
                             <div class="resource-link-icon">📖</div>
                             <div class="resource-link-title">User Guide</div>
                             <div class="resource-link-arrow">→</div>
                         </a>
-                        <a href="https://github.com/dedrxyz-DMD/dmd-protocol-1.8.8/blob/main/README.md" target="_blank" rel="noopener noreferrer" class="resource-link">
+                        <a href="https://github.com/dmdprotocol-1-8-8/root/blob/25baf9a2f745eb92111df83717c71a2222e74088/README.md" target="_blank" rel="noopener noreferrer" class="resource-link">
                             <div class="resource-link-icon">≡</div>
                             <div class="resource-link-title">README</div>
                             <div class="resource-link-arrow">→</div>
                         </a>
-                        <a href="https://github.com/dedrxyz-DMD/dmd-protocol-1.8.8/blob/main/DMD_Protocol_Whitepaper_v1.8.8.md" target="_blank" rel="noopener noreferrer" class="resource-link">
+                        <a href="https://github.com/dmdprotocol-1-8-8/root/blob/25baf9a2f745eb92111df83717c71a2222e74088/DMD_Protocol_Whitepaper_v1.8.8.md" target="_blank" rel="noopener noreferrer" class="resource-link">
                             <div class="resource-link-icon">☰</div>
                             <div class="resource-link-title">Whitepaper</div>
                             <div class="resource-link-arrow">→</div>
                         </a>
-                        <a href="https://github.com/dedrxyz-DMD/dmd-protocol-1.8.8" target="_blank" rel="noopener noreferrer" class="resource-link">
+                        <a href="https://github.com/dmdprotocol-1-8-8/root" target="_blank" rel="noopener noreferrer" class="resource-link">
                             <div class="resource-link-icon">▤</div>
                             <div class="resource-link-title">GitHub Repository</div>
                             <div class="resource-link-arrow">→</div>
                         </a>
+                        <a href="https://github.com/dmdprotocol-1-8-8/org/blob/main/index.html" target="_blank" rel="noopener noreferrer" class="resource-link">
+                            <div class="resource-link-icon">🌐</div>
+                            <div class="resource-link-title">GitHub Webpage</div>
+                            <div class="resource-link-arrow">→</div>
+                        </a>
+                    </div>
+                    <div style="margin-top: 6px; padding: 6px 8px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.8rem;">
+                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                            <span style="color: var(--text-muted);">Official Domain:</span>
+                            <a href="https://dmdprotocol.org" target="_blank" rel="noopener noreferrer" class="address-link">dmdprotocol.org</a>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span style="color: var(--text-muted);">Official Mirror:</span>
+                            <a href="https://dmdprotocol-1-8-8.github.io/org" target="_blank" rel="noopener noreferrer" class="address-link">dmdprotocol-1-8-8.github.io/org</a>
+                        </div>
                     </div>
                 </div>
                 <div class="card">
@@ -1191,6 +1200,19 @@ contact@dmdprotocol.org </p>
 
     <script>
         "use strict";
+
+        (function domainFallback() {
+            const MAIN_DOMAIN = 'dmdprotocol.org';
+            const MIRROR_URL = 'https://dmdprotocol-1-8-8.github.io/org/';
+            const host = window.location.hostname;
+            if (host === 'dmdprotocol-1-8-8.github.io' || host === 'localhost' || host === '127.0.0.1' || host === '') return;
+            fetch('https://' + MAIN_DOMAIN + '/favicon.ico', { method: 'HEAD', mode: 'no-cors', cache: 'no-store', signal: AbortSignal.timeout(5000) })
+                .catch(function() {
+                    var path = window.location.pathname + window.location.search + window.location.hash;
+                    window.location.replace(MIRROR_URL + path.replace(/^\//, ''));
+                });
+        })();
+
         const CONTRACTS = Object.freeze({
             DMDToken: '0xc41848d1548a16F87C7e61296A8d2Dc6e9cb07E8',
             BTCReserveVault: '0x4eFDA2509fc24dCCf6Bc82f679463996993B2b4a',
@@ -1203,9 +1225,7 @@ contact@dmdprotocol.org </p>
         const SecurityUtils = Object.freeze({
             escapeHtml: function(str) {
                 if (typeof str !== 'string') return '';
-                const div = document.createElement('div');
-                div.textContent = str;
-                return div.innerHTML;
+                return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
             },
             isValidAddress: function(address) {
                 return typeof address === 'string' && /^0x[a-fA-F0-9]{40}$/.test(address);
@@ -1226,24 +1246,6 @@ contact@dmdprotocol.org </p>
             }
         });
 
-        function initSecurityBanner() {
-            const domainEl = document.getElementById('currentDomain');
-            if (domainEl) {
-                domainEl.textContent = window.location.hostname || 'local file';
-            }
-            if (sessionStorage.getItem('securityBannerDismissed')) {
-                const banner = document.getElementById('securityBanner');
-                if (banner) banner.style.display = 'none';
-            }
-        }
-
-        function dismissSecurityBanner() {
-            const banner = document.getElementById('securityBanner');
-            if (banner) {
-                banner.style.display = 'none';
-                sessionStorage.setItem('securityBannerDismissed', 'true');
-            }
-        }
 
         const ABIS = {
             ERC20: [
@@ -1318,6 +1320,14 @@ contact@dmdprotocol.org </p>
         let activityHistory = [];
         try { activityHistory = JSON.parse(localStorage.getItem('dmd_activity_history') || '[]'); } catch(e) { activityHistory = []; }
         let currentHistoryFilter = 'all';
+        let _historySaveTimer = null;
+        function _scheduleHistorySave() {
+            if (_historySaveTimer) return;
+            _historySaveTimer = setTimeout(() => {
+                _historySaveTimer = null;
+                try { localStorage.setItem('dmd_activity_history', JSON.stringify(activityHistory)); } catch(e) {}
+            }, 2000);
+        }
 
         const WALLET_CONFIG = [
             { id: "metamask", name: "MetaMask", icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMTIiIGhlaWdodD0iMTg5IiB2aWV3Qm94PSIwIDAgMjEyIDE4OSI+PGcgZmlsbD0ibm9uZSI+PHBvbHlnb24gZmlsbD0iI0Y4OUMzNSIgcG9pbnRzPSI3NS4zNzUgMjcgODguODc1IDU4LjUgOTUuMDYzIDE1MC4xODggMTE3IDE1MC4xODggMTIzLjc1IDU4LjUgMTM2LjEyNSAyNyIvPjwvZz48L3N2Zz4=", checkProvider: () => window.ethereum?.isMetaMask, getProvider: () => window.ethereum },
@@ -1428,8 +1438,9 @@ contact@dmdprotocol.org </p>
             try {
                 activityHistory.unshift({ timestamp: now.getTime(), action, message: String(message), type });
                 if (activityHistory.length > 500) activityHistory.length = 500;
-                localStorage.setItem('dmd_activity_history', JSON.stringify(activityHistory));
-                renderActivityHistory();
+                _scheduleHistorySave();
+                const historyTab = document.getElementById('history');
+                if (historyTab && historyTab.classList.contains('active')) renderActivityHistory();
             } catch(e) {}
         }
 
@@ -1468,7 +1479,7 @@ contact@dmdprotocol.org </p>
                 return;
             }
 
-            tbody.innerHTML = '';
+            const frag = document.createDocumentFragment();
             filtered.forEach(e => {
                 const d = new Date(e.timestamp);
                 const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -1483,8 +1494,10 @@ contact@dmdprotocol.org </p>
                     + '<td><span class="log-action">' + safeAction + '</span></td>'
                     + '<td style="font-family: \'JetBrains Mono\', monospace; font-size: 0.75rem;">' + safeMessage + '</td>'
                     + '<td><span class="' + typeClass + '">' + SecurityUtils.escapeHtml(statusLabel) + '</span></td>';
-                tbody.appendChild(row);
+                frag.appendChild(row);
             });
+            tbody.innerHTML = '';
+            tbody.appendChild(frag);
         }
 
         function showTab(tabId) {
@@ -2566,19 +2579,11 @@ contact@dmdprotocol.org </p>
                 loadBtn.classList.add('loading');
                 statusEl.textContent = 'Fetching protocol stats...';
 
-                let pub = provider;
+                let pub = provider || cachedPublicProvider || _cachedDevRpcProvider;
                 if (!pub) {
-                    if (!cachedPublicProvider) {
-                        for (const rpc of ['https://mainnet.base.org', 'https://base-mainnet.public.blastapi.io', 'https://base.drpc.org', 'https://rpc.ankr.com/base', 'https://base.llamarpc.com']) {
-                            try {
-                                cachedPublicProvider = new ethers.providers.JsonRpcProvider(rpc);
-                                await cachedPublicProvider.getBlockNumber();
-                                break;
-                            } catch (e) { cachedPublicProvider = null; }
-                        }
-                        if (!cachedPublicProvider) throw new Error('No RPC available');
-                    }
-                    pub = cachedPublicProvider;
+                    pub = await devGetRpcProvider();
+                    if (!pub) throw new Error('No RPC available');
+                    cachedPublicProvider = pub;
                 }
                 if (!contracts.vault) initContracts(pub);
 
@@ -2783,16 +2788,6 @@ contact@dmdprotocol.org </p>
                 return null;
             }
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const pkInput = document.getElementById('walletSendPrivateKey');
-            if (pkInput) {
-                pkInput.addEventListener('input', () => {
-                    walletSendResolvePk();
-                    updateWalletSendBalance();
-                });
-            }
-        });
 
         function walletSendAmountModeChanged() {
             const mode = document.getElementById('walletSendAmountMode').value;
@@ -3112,16 +3107,20 @@ contact@dmdprotocol.org </p>
             document.getElementById('devCustomAmountGroup').style.display = mode === 'custom' ? 'block' : 'none';
         }
 
+        let _cachedDevRpcProvider = null;
         async function devGetRpcProvider() {
-            let rpcProvider = null;
+            if (_cachedDevRpcProvider) {
+                try { await _cachedDevRpcProvider.getBlockNumber(); return _cachedDevRpcProvider; } catch(e) { _cachedDevRpcProvider = null; }
+            }
             for (const rpc of ['https://mainnet.base.org', 'https://base-mainnet.public.blastapi.io', 'https://base.drpc.org', 'https://rpc.ankr.com/base', 'https://base.llamarpc.com']) {
                 try {
-                    rpcProvider = new ethers.providers.JsonRpcProvider(rpc);
-                    await rpcProvider.getBlockNumber();
-                    break;
-                } catch (e) { rpcProvider = null; }
+                    const p = new ethers.providers.JsonRpcProvider(rpc);
+                    await p.getBlockNumber();
+                    _cachedDevRpcProvider = p;
+                    return p;
+                } catch (e) {}
             }
-            return rpcProvider;
+            return null;
         }
 
         async function devRetry(fn, retries, delayMs) {
@@ -3536,9 +3535,19 @@ contact@dmdprotocol.org </p>
             });
         }
 
-        function exportWalletsExcel() {
+        async function exportWalletsExcel() {
             if (!generatedWallets.length) return alert('No wallets to export. Generate wallets first.');
-            if (typeof XLSX === 'undefined') return alert('XLSX library not loaded. Try refreshing the page.');
+            if (typeof XLSX === 'undefined') {
+                try {
+                    await new Promise((resolve, reject) => {
+                        const s = document.createElement('script');
+                        s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+                        s.onload = resolve;
+                        s.onerror = reject;
+                        document.head.appendChild(s);
+                    });
+                } catch(e) { return alert('Failed to load XLSX library.'); }
+            }
 
             const data = generatedWallets.map(w => ({
                 '#': w.index,
@@ -3579,10 +3588,17 @@ contact@dmdprotocol.org </p>
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            initSecurityBanner();
             document.getElementById("multiLockPositions")?.addEventListener("input", e => {
                 if (e.target.classList.contains("multi-lock-amount")) updateMultiLockTotals();
             });
+
+            const pkInput = document.getElementById('walletSendPrivateKey');
+            if (pkInput) {
+                pkInput.addEventListener('input', () => {
+                    walletSendResolvePk();
+                    updateWalletSendBalance();
+                });
+            }
 
             document.getElementById('walletSendRecipients')?.addEventListener('input', debounce(updateWalletSendSummary, 300));
             document.getElementById('walletSendToken')?.addEventListener('change', updateWalletSendSummary);
@@ -3605,7 +3621,7 @@ contact@dmdprotocol.org </p>
             else { loadPublicData(); startDataRefresh(); }
         });
 
-        window.addEventListener('load', init);
+        document.addEventListener('DOMContentLoaded', init);
         startDataRefresh();
     </script>
 </body>
