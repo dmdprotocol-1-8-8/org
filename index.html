@@ -456,6 +456,7 @@
             <div class="header-content">
                 <div class="logo">
                     <div style="display: flex; align-items: center; gap: 8px;">
+                        <img src="logo.svg" alt="DMD Logo" style="height: 1.6em; width: auto; font-size: 1.6rem;">
                         <div>
                             <a href="#" onclick="showTab('dashboard'); return false;" style="text-decoration: none;"><h1>DMD Protocol</h1></a>
                             <span>Base Mainnet - Immutable Bitcoin Liquidity & Emission Protocol</span>
@@ -1201,17 +1202,7 @@ contact@dmdprotocol.org </p>
     <script>
         "use strict";
 
-        (function domainFallback() {
-            const MAIN_DOMAIN = 'dmdprotocol.org';
-            const MIRROR_URL = 'https://dmdprotocol-1-8-8.github.io/org/';
-            const host = window.location.hostname;
-            if (host === 'dmdprotocol-1-8-8.github.io' || host === 'localhost' || host === '127.0.0.1' || host === '') return;
-            fetch('https://' + MAIN_DOMAIN + '/favicon.ico', { method: 'HEAD', mode: 'no-cors', cache: 'no-store', signal: AbortSignal.timeout(5000) })
-                .catch(function() {
-                    var path = window.location.pathname + window.location.search + window.location.hash;
-                    window.location.replace(MIRROR_URL + path.replace(/^\//, ''));
-                });
-        })();
+        /* domainFallback removed — silent cross-domain redirect triggered Google Safe Browsing warning */
 
         const CONTRACTS = Object.freeze({
             DMDToken: '0xc41848d1548a16F87C7e61296A8d2Dc6e9cb07E8',
