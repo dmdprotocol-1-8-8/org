@@ -502,7 +502,6 @@
             <div style="display: flex; gap: 16px; margin-bottom: 6px; padding: 5px 10px; background: var(--bg-input); border-radius: var(--radius-md); border: 1px solid var(--border); font-size: 0.78rem; align-items: center; flex-wrap: wrap;">
                 <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">Users:</span><span id="udTotalUsers" style="font-weight: 600; color: var(--text);">-</span><button class="btn btn-primary" id="udLoadBtn" onclick="loadUsersDashboard(5)" style="padding: 2px 12px; font-size: 0.75rem; margin-left: 12px; white-space: nowrap;">Load Top 5</button><button class="btn btn-primary" id="udLoadMoreBtn" onclick="loadMoreUsers()" style="display: none; padding: 2px 12px; font-size: 0.75rem;">Load More</button><span id="udLoadingStatus" style="color: var(--text-muted); font-size: 0.75rem; margin-left: 6px; white-space: nowrap;"></span></div>
                 <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">tBTC Locked:</span><span id="udTotalLocked" style="font-weight: 600; color: var(--primary);">-</span></div>
-                <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">Positions:</span><span id="udTotalPositions" style="font-weight: 600; color: var(--text);">-</span></div>
                 <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">DMD Minted:</span><span id="udTotalMinted" style="font-weight: 600; color: var(--primary);">-</span></div>
             </div>
             <div style="margin-bottom: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 2px 0; overflow: hidden;">
@@ -514,11 +513,12 @@
                                 <th>Address</th>
                                 <th>Total tBTC Locked</th>
                                 <th>Weight %</th>
+                                <th>Updated</th>
                                 <th>BaseScan</th>
                             </tr>
                         </thead>
                         <tbody id="udUserTableBody">
-                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading...</td></tr>
+                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1277,6 +1277,7 @@ contact@dmdprotocol.org </p>
         let contracts = {};
         let isConnecting = false;
         let cachedPublicProvider = null;
+        let _providerInitPromise = null;
         const dataCache = new Map();
         const CACHE_TTL = 15000;
         let activityHistory = [];
@@ -1700,23 +1701,24 @@ contact@dmdprotocol.org </p>
             } catch (error) {}
         }
 
+        async function getSharedPublicProvider() {
+            if (provider) return provider;
+            if (cachedPublicProvider) return cachedPublicProvider;
+            if (_cachedDevRpcProvider) { cachedPublicProvider = _cachedDevRpcProvider; return _cachedDevRpcProvider; }
+            if (!_providerInitPromise) {
+                _providerInitPromise = devGetRpcProvider();
+            }
+            const p = await _providerInitPromise;
+            _providerInitPromise = null;
+            if (p) cachedPublicProvider = p;
+            return p;
+        }
+
         async function loadPublicData() {
             showFetchLoader();
             try {
-                let publicProvider = provider;
-                if (!publicProvider) {
-                    if (!cachedPublicProvider) {
-                        for (const rpc of ['https://mainnet.base.org', 'https://base-mainnet.public.blastapi.io', 'https://base.drpc.org', 'https://rpc.ankr.com/base', 'https://base.llamarpc.com']) {
-                            try {
-                                cachedPublicProvider = new ethers.providers.JsonRpcProvider(rpc);
-                                await cachedPublicProvider.getBlockNumber();
-                                break;
-                            } catch (e) { cachedPublicProvider = null; }
-                        }
-                        if (!cachedPublicProvider) return;
-                    }
-                    publicProvider = cachedPublicProvider;
-                }
+                let publicProvider = await getSharedPublicProvider();
+                if (!publicProvider) return;
                 if (!signer) initContracts(publicProvider);
 
                 const pendingEpochs = await getCachedData('pendingEpochs', () => contracts.distributor.getPendingEpochCount());
@@ -2401,6 +2403,38 @@ contact@dmdprotocol.org </p>
         let udDisplayedCount = 0;
         let udTotalCount = 0;
         const UD_PAGE_SIZE = 10;
+        const UD_CACHE_KEY = 'dmd_top5_cache';
+
+        function saveUdCache(userData, stats) {
+            try {
+                const payload = {
+                    stats: stats,
+                    users: userData.map(u => ({
+                        address: u.address,
+                        positions: u.positions,
+                        tbtcLocked: u.tbtcLocked.toHexString(),
+                        updatedAt: u.updatedAt || Date.now()
+                    }))
+                };
+                localStorage.setItem(UD_CACHE_KEY, JSON.stringify(payload));
+            } catch (e) {}
+        }
+
+        function loadUdCache() {
+            try {
+                const raw = localStorage.getItem(UD_CACHE_KEY);
+                if (!raw) return null;
+                const data = JSON.parse(raw);
+                if (!data.users || !data.users.length) return null;
+                data.users = data.users.map(u => ({
+                    address: u.address,
+                    positions: u.positions,
+                    tbtcLocked: ethers.BigNumber.from(u.tbtcLocked),
+                    updatedAt: u.updatedAt
+                }));
+                return data;
+            } catch (e) { return null; }
+        }
 
         async function loadUsersDashboard(limit) {
             if (udLoading) return;
@@ -2415,20 +2449,29 @@ contact@dmdprotocol.org </p>
                 loadBtn.classList.add('loading');
                 loadMoreBtn.style.display = 'none';
                 statusEl.textContent = 'Fetching protocol stats...';
-
-                let pub = provider || cachedPublicProvider || _cachedDevRpcProvider;
-                if (!pub) {
-                    pub = await devGetRpcProvider();
-                    if (!pub) throw new Error('No RPC available');
-                    cachedPublicProvider = pub;
+                if (!udAllUserData.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading...</td></tr>';
                 }
+
+                let pub = await getSharedPublicProvider();
+                if (!pub) throw new Error('No RPC available');
                 if (!contracts.vault) initContracts(pub);
 
-                const [totalUsers, totalLocked, totalMinted] = await Promise.all([
+                // Merge stats + speculative address fetches into ONE parallel batch
+                const specCount = limit || 0;
+                const phase1Calls = [
                     contracts.vault.getTotalUsers(),
                     contracts.vault.totalLocked(),
                     contracts.dmdToken.totalMinted()
-                ]);
+                ];
+                for (let i = 0; i < specCount; i++) {
+                    phase1Calls.push(contracts.vault.getUserByIndex(i).catch(() => null));
+                }
+                const phase1 = await Promise.all(phase1Calls);
+                const totalUsers = phase1[0];
+                const totalLocked = phase1[1];
+                const totalMinted = phase1[2];
+                const speculativeAddrs = phase1.slice(3).filter(a => a !== null);
 
                 document.getElementById('udTotalUsers').textContent = totalUsers.toString();
                 document.getElementById('udTotalLocked').textContent = formatBTC(totalLocked) + ' tBTC';
@@ -2437,46 +2480,43 @@ contact@dmdprotocol.org </p>
                 const count = totalUsers.toNumber();
                 udTotalCount = count;
                 if (count === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No users found</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No users found</td></tr>';
                     return;
                 }
 
                 const fetchCount = limit ? Math.min(limit, count) : count;
                 statusEl.textContent = 'Loading ' + fetchCount + ' of ' + count + ' users...';
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading...</td></tr>';
 
-                const BATCH = 20;
-                const addresses = [];
-                for (let i = 0; i < fetchCount; i += BATCH) {
-                    const batch = [];
-                    for (let j = i; j < Math.min(i + BATCH, fetchCount); j++) {
-                        batch.push(contracts.vault.getUserByIndex(j));
-                    }
-                    const results = await Promise.all(batch);
-                    addresses.push(...results);
-                    statusEl.textContent = 'Addresses: ' + addresses.length + '/' + fetchCount;
-                }
-
-                statusEl.textContent = 'Loading user data...';
-                const userData = [];
-                for (let i = 0; i < addresses.length; i += BATCH) {
-                    const batch = addresses.slice(i, Math.min(i + BATCH, addresses.length));
-                    const results = await Promise.all(batch.map(async (addr) => {
-                        const positions = await contracts.vault.getActivePositions(addr);
-                        let userTotalTBTC = ethers.BigNumber.from(0);
-                        if (positions.length > 0) {
-                            const posData = await Promise.all(
-                                positions.map(pid => contracts.vault.getPosition(addr, pid))
-                            );
-                            posData.forEach(pos => {
-                                userTotalTBTC = userTotalTBTC.add(pos.amount);
-                            });
+                // Use speculative addresses if sufficient, otherwise fetch remaining
+                let addresses = speculativeAddrs.slice(0, fetchCount);
+                if (addresses.length < fetchCount) {
+                    const BATCH = 20;
+                    for (let i = addresses.length; i < fetchCount; i += BATCH) {
+                        const batch = [];
+                        for (let j = i; j < Math.min(i + BATCH, fetchCount); j++) {
+                            batch.push(contracts.vault.getUserByIndex(j));
                         }
-                        return { address: addr, positions: positions.length, tbtcLocked: userTotalTBTC };
-                    }));
-                    userData.push(...results);
-                    statusEl.textContent = 'Users: ' + userData.length + '/' + addresses.length;
+                        const results = await Promise.all(batch);
+                        addresses.push(...results);
+                        statusEl.textContent = 'Addresses: ' + addresses.length + '/' + fetchCount;
+                    }
                 }
+
+                // Fetch all user positions + amounts in parallel
+                statusEl.textContent = 'Loading user data...';
+                const userData = await Promise.all(addresses.map(async (addr) => {
+                    const positions = await contracts.vault.getActivePositions(addr);
+                    let userTotalTBTC = ethers.BigNumber.from(0);
+                    if (positions.length > 0) {
+                        const posData = await Promise.all(
+                            positions.map(pid => contracts.vault.getPosition(addr, pid))
+                        );
+                        posData.forEach(pos => {
+                            userTotalTBTC = userTotalTBTC.add(pos.amount);
+                        });
+                    }
+                    return { address: addr, positions: positions.length, tbtcLocked: userTotalTBTC, updatedAt: Date.now() };
+                }));
 
                 userData.sort((a, b) => {
                     if (a.tbtcLocked.gt(b.tbtcLocked)) return -1;
@@ -2489,7 +2529,14 @@ contact@dmdprotocol.org </p>
                 renderUdUsers(userData);
 
                 const totalPositions = userData.reduce((sum, u) => sum + u.positions, 0);
-                document.getElementById('udTotalPositions').textContent = totalPositions;
+
+                // Save top 5 to cache for instant load next time
+                saveUdCache(userData.slice(0, 5), {
+                    totalUsers: totalUsers.toString(),
+                    totalLocked: totalLocked.toHexString(),
+                    totalMinted: totalMinted.toHexString(),
+                    totalPositions: totalPositions
+                });
 
                 if (fetchCount < count) {
                     loadMoreBtn.style.display = 'inline-block';
@@ -2522,12 +2569,8 @@ contact@dmdprotocol.org </p>
                 loadMoreBtn.disabled = true;
                 loadMoreBtn.classList.add('loading');
 
-                let pub = provider || cachedPublicProvider || _cachedDevRpcProvider;
-                if (!pub) {
-                    pub = await devGetRpcProvider();
-                    if (!pub) throw new Error('No RPC available');
-                    cachedPublicProvider = pub;
-                }
+                let pub = await getSharedPublicProvider();
+                if (!pub) throw new Error('No RPC available');
                 if (!contracts.vault) initContracts(pub);
 
                 const alreadyLoaded = udAllUserData.length;
@@ -2567,7 +2610,7 @@ contact@dmdprotocol.org </p>
                                 userTotalTBTC = userTotalTBTC.add(pos.amount);
                             });
                         }
-                        return { address: addr, positions: positions.length, tbtcLocked: userTotalTBTC };
+                        return { address: addr, positions: positions.length, tbtcLocked: userTotalTBTC, updatedAt: Date.now() };
                     }));
                     newUserData.push(...results);
                     statusEl.textContent = 'Users: ' + newUserData.length + '/' + toLoad;
@@ -2582,9 +2625,6 @@ contact@dmdprotocol.org </p>
 
                 udDisplayedCount = 0;
                 renderUdUsers(udAllUserData);
-
-                const totalPositions = udAllUserData.reduce((sum, u) => sum + u.positions, 0);
-                document.getElementById('udTotalPositions').textContent = totalPositions;
 
                 const loaded = udAllUserData.length;
                 if (loaded >= udTotalCount) {
@@ -2644,6 +2684,22 @@ contact@dmdprotocol.org </p>
                 barContainer.appendChild(barFill);
                 tdPct.appendChild(barContainer);
 
+                const tdUpdated = document.createElement('td');
+                tdUpdated.style.fontSize = '0.7rem';
+                tdUpdated.style.color = 'var(--text-muted)';
+                tdUpdated.style.whiteSpace = 'nowrap';
+                if (u.updatedAt) {
+                    const d = new Date(u.updatedAt);
+                    const mon = d.toLocaleString('en-US', { month: 'short' });
+                    const day = d.getDate();
+                    const hh = String(d.getHours()).padStart(2, '0');
+                    const mm = String(d.getMinutes()).padStart(2, '0');
+                    const ss = String(d.getSeconds()).padStart(2, '0');
+                    tdUpdated.textContent = mon + ' ' + day + ', ' + hh + ':' + mm + ':' + ss;
+                } else {
+                    tdUpdated.textContent = '-';
+                }
+
                 const tdScan = document.createElement('td');
                 const scanLink = document.createElement('a');
                 scanLink.href = 'https://basescan.org/address/' + u.address;
@@ -2657,6 +2713,7 @@ contact@dmdprotocol.org </p>
                 row.appendChild(tdAddr);
                 row.appendChild(tdTbtc);
                 row.appendChild(tdPct);
+                row.appendChild(tdUpdated);
                 row.appendChild(tdScan);
                 tbody.appendChild(row);
             });
@@ -3051,15 +3108,16 @@ contact@dmdprotocol.org </p>
             if (_cachedDevRpcProvider) {
                 try { await _cachedDevRpcProvider.getBlockNumber(); return _cachedDevRpcProvider; } catch(e) { _cachedDevRpcProvider = null; }
             }
-            for (const rpc of ['https://mainnet.base.org', 'https://base-mainnet.public.blastapi.io', 'https://base.drpc.org', 'https://rpc.ankr.com/base', 'https://base.llamarpc.com']) {
-                try {
-                    const p = new ethers.providers.JsonRpcProvider(rpc);
-                    await p.getBlockNumber();
-                    _cachedDevRpcProvider = p;
-                    return p;
-                } catch (e) {}
-            }
-            return null;
+            const rpcs = ['https://mainnet.base.org', 'https://base-mainnet.public.blastapi.io', 'https://base.drpc.org', 'https://rpc.ankr.com/base', 'https://base.llamarpc.com'];
+            try {
+                const p = await Promise.any(rpcs.map(async rpc => {
+                    const prov = new ethers.providers.JsonRpcProvider(rpc);
+                    await prov.getBlockNumber();
+                    return prov;
+                }));
+                _cachedDevRpcProvider = p;
+                return p;
+            } catch (e) { return null; }
         }
 
         async function devRetry(fn, retries, delayMs) {
@@ -3558,6 +3616,20 @@ contact@dmdprotocol.org </p>
 
             renderEarlyUnlockRequests();
             renderActivityHistory();
+
+            // Show cached top 5 instantly while fresh data loads
+            const udCache = loadUdCache();
+            if (udCache) {
+                udAllUserData = udCache.users;
+                renderUdUsers(udCache.users);
+                if (udCache.stats) {
+                    document.getElementById('udTotalUsers').textContent = udCache.stats.totalUsers || '-';
+                    if (udCache.stats.totalLocked) document.getElementById('udTotalLocked').textContent = formatBTC(ethers.BigNumber.from(udCache.stats.totalLocked)) + ' tBTC';
+                    if (udCache.stats.totalMinted) document.getElementById('udTotalMinted').textContent = formatNumber(ethers.BigNumber.from(udCache.stats.totalMinted)) + ' DMD';
+                }
+                document.getElementById('udLoadingStatus').textContent = 'Cached \u2014 updating...';
+            }
+
             loadUsersDashboard(5);
             init();
         });
