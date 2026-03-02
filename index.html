@@ -118,18 +118,7 @@
         .btn-danger { background: var(--error); color: var(--text); }
         .btn:hover { transform: translateY(-2px); will-change: transform; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
-        .btn.loading { position: relative; color: transparent !important; }
-        .btn.loading::after {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 20px; height: 20px;
-            margin: -10px 0 0 -10px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top: 2px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
+        .btn.loading { opacity: 0.6; pointer-events: none; }
         .wallet-info {
             display: flex;
             align-items: center;
@@ -176,8 +165,7 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; content-visibility: auto; }
         .grid-2-col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .grid-3-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        @media (max-width: 900px) { .grid-2-col, .grid-3-col { grid-template-columns: 1fr; } }
+        @media (max-width: 900px) { .grid-2-col { grid-template-columns: 1fr; } }
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -189,8 +177,8 @@
         .card:hover { transform: translateY(-2px); border-color: var(--border-light); }
         .card h3 {
             color: var(--primary);
-            margin-bottom: 6px;
-            padding-bottom: 4px;
+            margin-bottom: 3px;
+            padding-bottom: 2px;
             border-bottom: 1px solid var(--border);
             font-size: 1.1rem;
         }
@@ -236,8 +224,8 @@
             margin-bottom: 6px;
         }
         .info-box p { font-size: 0.8rem; color: var(--text-muted); }
-        table { width: 100%; border-collapse: collapse; margin-top: 4px; border-radius: var(--radius-sm); overflow: hidden; }
-        th, td { padding: 3px 6px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 2px; border-radius: var(--radius-sm); overflow: hidden; }
+        th, td { padding: 2px 6px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
         th { color: var(--text-light); font-size: 0.65rem; text-transform: uppercase; background: var(--bg-input); }
         tr:hover td { background: var(--bg-hover); }
         .progress-bar { height: 6px; background: var(--bg-input); border-radius: 3px; overflow: hidden; margin-top: 4px; }
@@ -278,7 +266,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            padding: 4px 8px;
+            padding: 2px 8px;
             background: var(--bg-input);
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
@@ -288,7 +276,7 @@
             transition: var(--transition);
         }
         .resource-link:hover { background: var(--bg-hover); border-color: var(--primary); transform: translateX(4px); }
-        .resource-link-icon { font-size: 0.8rem; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; background: rgba(59,130,246,0.1); border-radius: var(--radius-sm); color: #3b82f6; }
+        .resource-link-icon { font-size: 0.75rem; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; background: rgba(59,130,246,0.1); border-radius: var(--radius-sm); color: #3b82f6; }
         .resource-link-title { font-weight: 600; font-size: 0.75rem; }
         .resource-link-arrow { color: #3b82f6; margin-left: auto; font-size: 0.7rem; }
         .modal-overlay {
@@ -429,11 +417,11 @@
         .activity-log-entry .log-error { color: #1e3a8a; }
         .weight-bar-container {
             width: 100%;
-            height: 6px;
+            height: 3px;
             background: var(--bg-input);
-            border-radius: 3px;
+            border-radius: 2px;
             overflow: hidden;
-            margin-top: 2px;
+            margin-top: 1px;
         }
         .weight-bar-fill {
             height: 100%;
@@ -475,12 +463,11 @@
 
     <div class="container">
         <div class="tabs" style="align-items: center;">
-            <button class="tab active" onclick="showTab('dashboard')"><span>▣</span> Dashboard</button>
+            <button class="tab active" onclick="showTab('dashboard')"><span>▣</span> Overview</button>
             <button class="tab" onclick="showTab('vault')"><span>◈</span> BTC Vault</button>
             <button class="tab" onclick="showTab('emissions')"><span>◇</span> Emissions</button>
             <button class="tab" onclick="showTab('history')"><span>▤</span> Activity</button>
             <button class="tab" onclick="showTab('redemption')"><span>↻</span> Redemption</button>
-            <button class="tab" onclick="showTab('usersdashboard')"><span>◎</span> Overview</button>
             <button class="tab" onclick="showTab('aboutus')"><span>◉</span> About Us</button>
             <div style="margin-left: auto; display: flex; align-items: center; gap: 16px; padding: 5px 14px; white-space: nowrap;">
                 <div style="display: flex; align-items: center; gap: 5px;">
@@ -512,33 +499,34 @@
         </div>
 
         <div id="dashboard" class="tab-content active">
-            <div class="grid-3-col">
-                <div class="card">
-                    <h3>Your Locked tBTC</h3>
-                    <div class="stat">
-                        <div class="stat-label">Total Position Lock</div>
-                        <div class="stat-value" id="dashboardLockedTBTC">-</div>
-                    </div>
-                </div>
-                <div class="card">
-                    <h3>Claimable DMD</h3>
-                    <div class="stat">
-                        <div class="stat-label">Rewards Available</div>
-                        <div class="stat-value" id="dashboardClaimable">-</div>
-                    </div>
-                </div>
-                <div class="card">
-                    <h3>DMD Balance</h3>
-                    <div class="stat">
-                        <div class="stat-label">Wallet Balance</div>
-                        <div class="stat-value" id="tokenBalance">-</div>
-                    </div>
+            <div style="display: flex; gap: 16px; margin-bottom: 6px; padding: 5px 10px; background: var(--bg-input); border-radius: var(--radius-md); border: 1px solid var(--border); font-size: 0.78rem; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">Users:</span><span id="udTotalUsers" style="font-weight: 600; color: var(--text);">-</span><button class="btn btn-primary" id="udLoadBtn" onclick="loadUsersDashboard(5)" style="padding: 2px 12px; font-size: 0.75rem; margin-left: 12px; white-space: nowrap;">Load Top 5</button><button class="btn btn-primary" id="udLoadMoreBtn" onclick="loadMoreUsers()" style="display: none; padding: 2px 12px; font-size: 0.75rem;">Load More</button><span id="udLoadingStatus" style="color: var(--text-muted); font-size: 0.75rem; margin-left: 6px; white-space: nowrap;"></span></div>
+                <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">tBTC Locked:</span><span id="udTotalLocked" style="font-weight: 600; color: var(--primary);">-</span></div>
+                <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">Positions:</span><span id="udTotalPositions" style="font-weight: 600; color: var(--text);">-</span></div>
+                <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">DMD Minted:</span><span id="udTotalMinted" style="font-weight: 600; color: var(--primary);">-</span></div>
+            </div>
+            <div style="margin-bottom: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 2px 0; overflow: hidden;">
+                <div style="max-height: 160px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(60,60,60,0.8) transparent;">
+                    <table>
+                        <thead style="position: sticky; top: 0; z-index: 1;">
+                            <tr>
+                                <th>#</th>
+                                <th>Address</th>
+                                <th>Total tBTC Locked</th>
+                                <th>Weight %</th>
+                                <th>BaseScan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="udUserTableBody">
+                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
             <div class="grid-2-col" style="margin-top: 8px;">
                 <div class="card">
                     <h3>Resources</h3>
-                    <div style="display: flex; flex-direction: column; gap: 3px;">
+                    <div style="display: flex; flex-direction: column; gap: 1px;">
                         <a href="https://github.com/dmdprotocol-1-8-8/root/blob/25baf9a2f745eb92111df83717c71a2222e74088/User%20Guide.md" target="_blank" rel="noopener noreferrer" class="resource-link">
                             <div class="resource-link-icon">◈</div>
                             <div class="resource-link-title">User Guide</div>
@@ -565,8 +553,8 @@
                             <div class="resource-link-arrow">›</div>
                         </a>
                     </div>
-                    <div style="margin-top: 6px; padding: 6px 8px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.8rem;">
-                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                    <div style="margin-top: 4px; padding: 3px 8px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
                             <span style="color: var(--text-muted);">Official Domain:</span>
                             <a href="https://dmdprotocol.org" target="_blank" rel="noopener noreferrer" class="address-link">dmdprotocol.org</a>
                         </div>
@@ -716,6 +704,11 @@
         </div>
 
         <div id="emissions" class="tab-content">
+            <div style="display: flex; gap: 16px; margin-bottom: 6px; padding: 5px 10px; background: var(--bg-input); border-radius: var(--radius-md); border: 1px solid var(--border); font-size: 0.78rem; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">Locked tBTC:</span><span id="dashboardLockedTBTC" style="font-weight: 600; color: var(--primary);">-</span></div>
+                <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">Claimable DMD:</span><span id="dashboardClaimable" style="font-weight: 600; color: var(--primary);">-</span></div>
+                <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">DMD Balance:</span><span id="tokenBalance" style="font-weight: 600; color: var(--primary);">-</span></div>
+            </div>
             <div style="display: flex; gap: 10px; margin-bottom: 6px; padding: 10px 14px; background: var(--bg-input); border-radius: var(--radius-md); border: 1px solid var(--border); font-size: 0.78rem; align-items: center; flex-wrap: wrap;">
                 <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">Pending:</span><span id="pendingEpochsEmission" style="font-weight: 600; color: var(--text);">0</span></div>
                 <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">Batch:</span><input type="number" id="batchCount" value="5" min="1" max="50" style="width: 50px; padding: 2px 6px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 0.78rem; text-align: center;"></div>
@@ -757,7 +750,7 @@
                 <div style="display: flex; gap: 16px; margin-bottom: 4px; padding: 4px 10px; background: var(--bg-input); border-radius: var(--radius-md); border: 1px solid var(--border); font-size: 0.78rem;">
                     <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">Total:</span><span id="historyTotalActions" style="font-weight: 600; color: var(--text);">0</span></div>
                     <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">Success:</span><span id="historySuccessCount" style="font-weight: 600; color: var(--success);">0</span></div>
-                    <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">Failed:</span><span id="historyErrorCount" style="font-weight: 600; color: #f87171;">0</span></div>
+                    <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">Failed:</span><span id="historyErrorCount" style="font-weight: 600; color: var(--text-muted);">0</span></div>
                     <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">Tx:</span><span id="historyTxCount" style="font-weight: 600; color: #818cf8;">0</span></div>
                 </div>
                 <div id="historyTableWrap" style="max-height: 320px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(60,60,60,0.8) transparent;">
@@ -806,33 +799,6 @@
             </div>
         </div>
 
-        <div id="usersdashboard" class="tab-content">
-            <div style="display: flex; gap: 16px; margin-bottom: 6px; padding: 5px 10px; background: var(--bg-input); border-radius: var(--radius-md); border: 1px solid var(--border); font-size: 0.78rem; align-items: center; flex-wrap: wrap;">
-                <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">Users:</span><span id="udTotalUsers" style="font-weight: 600; color: var(--text);">-</span><button class="btn btn-primary" id="udLoadBtn" onclick="loadUsersDashboard()" style="padding: 2px 12px; font-size: 0.75rem; margin-left: 12px;">Load All Users</button><span id="udLoadingStatus" style="color: var(--text-muted); font-size: 0.75rem; margin-left: 6px; white-space: nowrap;"></span></div>
-                <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">tBTC Locked:</span><span id="udTotalLocked" style="font-weight: 600; color: var(--primary);">-</span></div>
-                <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">Positions:</span><span id="udTotalPositions" style="font-weight: 600; color: var(--text);">-</span></div>
-                <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">DMD Minted:</span><span id="udTotalMinted" style="font-weight: 600; color: var(--primary);">-</span></div>
-            </div>
-            <div class="card" style="margin-top: 8px;">
-                <h3>User Breakdown</h3>
-                <div style="max-height: 340px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(60,60,60,0.8) transparent;">
-                    <table>
-                        <thead style="position: sticky; top: 0; z-index: 1;">
-                            <tr>
-                                <th>#</th>
-                                <th>Address</th>
-                                <th>Total tBTC Locked</th>
-                                <th>Weight %</th>
-                                <th>BaseScan</th>
-                            </tr>
-                        </thead>
-                        <tbody id="udUserTableBody">
-                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Click "Load All Users" to fetch data</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
 
         <div id="walletsend" class="tab-content">
             <div class="grid-2-col">
@@ -1200,7 +1166,7 @@
 contact@dmdprotocol.org </p>
                 <div id="advancedModeWrapper" style="display: flex; align-items: center; gap: 6px;">
                     <input type="checkbox" id="advancedModeToggle" onchange="toggleAdvancedMode()">
-                    <label for="advancedModeToggle" style="cursor: pointer; font-size: 0.8rem; color: var(--text-muted); margin: 0; white-space: nowrap;">Advanced Mode</label>
+                    <label for="advancedModeToggle" style="cursor: pointer; font-size: 0.8rem; color: var(--text-muted); margin: 0; white-space: nowrap;">Advanced</label>
                 </div>
             </div>
         </div>
@@ -1208,8 +1174,6 @@ contact@dmdprotocol.org </p>
 
     <script>
         "use strict";
-
-        /* domainFallback removed — silent cross-domain redirect triggered Google Safe Browsing warning */
 
         const CONTRACTS = Object.freeze({
             DMDToken: '0xc41848d1548a16F87C7e61296A8d2Dc6e9cb07E8',
@@ -1442,9 +1406,6 @@ contact@dmdprotocol.org </p>
             } catch(e) {}
         }
 
-        let historyPage = 0;
-        const HISTORY_PAGE_SIZE = 15;
-
         function filterActivity(filter, btn) {
             currentHistoryFilter = filter;
             historyPage = 0;
@@ -1509,10 +1470,10 @@ contact@dmdprotocol.org </p>
             const clickedTab = event.target.closest('.tab') || event.target;
             clickedTab.classList.add('active');
             if (tabId === 'history') renderActivityHistory();
-            if (tabId === 'usersdashboard') {
+            if (tabId === 'dashboard') {
                 const tbody = document.getElementById('udUserTableBody');
                 if (tbody && tbody.querySelector('td')?.textContent.includes('Click')) {
-                    loadUsersDashboard();
+                    loadUsersDashboard(5);
                 }
             }
             if (tabId === 'walletsend') updateWalletSendSummary();
@@ -1758,51 +1719,7 @@ contact@dmdprotocol.org </p>
                 }
                 if (!signer) initContracts(publicProvider);
 
-                const [totalSupply, totalMinted, totalBurned, maxSupply] = await Promise.all([
-                    getCachedData('totalSupply', () => contracts.dmdToken.totalSupply()),
-                    getCachedData('totalMinted', () => contracts.dmdToken.totalMinted()),
-                    getCachedData('totalBurned', () => contracts.dmdToken.totalBurned()),
-                    getCachedData('maxSupply', () => contracts.dmdToken.MAX_SUPPLY())
-                ]);
-                document.getElementById('totalSupply').textContent = formatNumber(totalSupply);
-                document.getElementById('totalMinted').textContent = formatNumber(totalMinted);
-                document.getElementById('totalBurned').textContent = formatNumber(totalBurned);
-                const percent = totalSupply.mul(10000).div(maxSupply).toNumber() / 100;
-                document.getElementById('supplyProgress').style.width = percent + '%';
-                document.getElementById('supplyPercent').textContent = percent.toFixed(2) + '%';
-
-                const [totalEmitted, claimableNow, currentYear, emissionRate] = await Promise.all([
-                    getCachedData('totalEmitted', () => contracts.scheduler.totalEmitted()),
-                    getCachedData('claimableNow', () => contracts.scheduler.claimableNow()),
-                    getCachedData('currentYear', () => contracts.scheduler.getCurrentYear()),
-                    getCachedData('emissionRate', () => contracts.scheduler.currentEmissionRate())
-                ]);
-                document.getElementById('totalEmitted').textContent = formatNumber(totalEmitted);
-                document.getElementById('claimableNow').textContent = formatNumber(claimableNow);
-                document.getElementById('currentYear').textContent = currentYear.toString();
-                document.getElementById('emissionRate').textContent = formatNumber(emissionRate.mul(86400));
-
-                const [totalLocked, totalWeight, vestedWeight, userCount] = await Promise.all([
-                    getCachedData('totalLocked', () => contracts.vault.totalLocked()),
-                    getCachedData('totalSystemWeight', () => contracts.vault.totalSystemWeight()),
-                    getCachedData('totalVestedWeight', () => contracts.vault.getTotalVestedWeight()),
-                    getCachedData('totalUsers', () => contracts.vault.getTotalUsers())
-                ]);
-                document.getElementById('totalLocked').textContent = formatBTC(totalLocked);
-                document.getElementById('totalWeight').textContent = formatNumber(totalWeight);
-                document.getElementById('vestedWeight').textContent = formatNumber(vestedWeight);
-                document.getElementById('totalUsers').textContent = userCount.toString();
-
-                const [currentEpoch, pendingEpochs, nextEpochIn, nextToFinalize] = await Promise.all([
-                    getCachedData('currentEpoch', () => contracts.distributor.getCurrentEpoch()),
-                    getCachedData('pendingEpochs', () => contracts.distributor.getPendingEpochCount()),
-                    getCachedData('timeUntilNextEpoch', () => contracts.distributor.timeUntilNextEpoch()),
-                    getCachedData('nextEpochToFinalize', () => contracts.distributor.getNextEpochToFinalize())
-                ]);
-                document.getElementById('currentEpoch').textContent = currentEpoch.toString();
-                document.getElementById('pendingEpochs').textContent = pendingEpochs.toString();
-                document.getElementById('nextEpochIn').textContent = formatDuration(nextEpochIn);
-                document.getElementById('nextEpochToFinalize').textContent = nextToFinalize.toString();
+                const pendingEpochs = await getCachedData('pendingEpochs', () => contracts.distributor.getPendingEpochCount());
                 document.getElementById('pendingEpochsEmission').textContent = pendingEpochs.toString();
             } catch (error) {} finally { hideFetchLoader(); }
         }
@@ -2142,26 +2059,6 @@ contact@dmdprotocol.org </p>
             }
         }
 
-        async function earlyUnlock() {
-            try {
-                if (!signer) throw new Error('Connect wallet first');
-                const posId = document.getElementById('unlockPositionId').value;
-                if (!posId) return alert('Enter position ID');
-                if (!confirm('EARLY UNLOCK WARNING\n\nThis will permanently remove weight. 30-day waiting period. Proceed?')) return;
-                showStatus('unlockStatus', 'info', 'Requesting...');
-                logActivity('Early Unlock', 'sending...', 'info');
-                const tx = await contracts.vault.requestEarlyUnlock(posId);
-                logActivity('Early Unlock', tx.hash, 'hash');
-                await tx.wait();
-                logActivity('Early Unlock', 'confirmed', 'success');
-                showStatus('unlockStatus', 'success', 'Early unlock requested!');
-                saveEarlyUnlockRequest(posId);
-                renderEarlyUnlockRequests();
-                await loadUserData();
-            } catch (error) {
-                showStatus('unlockStatus', 'error', cleanError(error));
-            }
-        }
 
         function getEarlyUnlockRequests() {
             try { return JSON.parse(localStorage.getItem('earlyUnlockRequests')) || []; } catch { return []; }
@@ -2498,87 +2395,25 @@ contact@dmdprotocol.org </p>
             }
         }
 
-        const debouncedCheckRedemption = debounce(async function() {
-            try {
-                const posId = document.getElementById('redeemPositionId').value;
-                if (!posId) return;
-                const [required, redeemable] = await Promise.all([
-                    contracts.redemption.getRequiredBurn(userAddress, posId),
-                    contracts.redemption.isRedeemable(userAddress, posId)
-                ]);
-                document.getElementById('requiredBurn').textContent = formatNumber(required);
-                document.getElementById('isRedeemable').textContent = redeemable ? 'Yes' : 'No';
-            } catch (e) {}
-        }, 300);
-
-        async function approveDMDForRedemption() {
-            try {
-                if (!signer) throw new Error('Connect wallet first');
-                const posId = document.getElementById('redeemPositionId').value;
-                const required = await contracts.redemption.getRequiredBurn(userAddress, posId);
-                showStatus('redeemStatus', 'info', 'Approving...');
-                logActivity('Approve DMD', 'sending...', 'info');
-                const tx = await contracts.dmdToken.approve(CONTRACTS.RedemptionEngine, required);
-                logActivity('Approve DMD', tx.hash, 'hash');
-                await tx.wait();
-                logActivity('Approve DMD', 'confirmed', 'success');
-                showStatus('redeemStatus', 'success', 'Approved!');
-            } catch (error) {
-                logActivity('Approve DMD', 'failed', 'error');
-                showStatus('redeemStatus', 'error', cleanError(error));
-            }
-        }
-
-        async function redeemPosition() {
-            try {
-                if (!signer) throw new Error('Connect wallet first');
-                const posId = document.getElementById('redeemPositionId').value;
-                if (!posId) return alert('Enter position ID');
-                const requiredBurn = await contracts.redemption.getRequiredBurn(userAddress, posId);
-                if (!confirm(`REDEMPTION: Burn ${formatNumber(requiredBurn)} DMD to redeem position #${posId}?`)) return;
-                showStatus('redeemStatus', 'info', 'Redeeming...');
-                logActivity('Redeem', 'sending...', 'info');
-                const tx = await contracts.redemption.redeem(posId);
-                logActivity('Redeem', tx.hash, 'hash');
-                await tx.wait();
-                logActivity('Redeem', 'confirmed', 'success');
-                showStatus('redeemStatus', 'success', 'Redeemed!');
-                await loadUserData();
-            } catch (error) {
-                logActivity('Redeem', 'failed', 'error');
-                showStatus('redeemStatus', 'error', cleanError(error));
-            }
-        }
-
-        async function redeemMultiple() {
-            try {
-                const ids = document.getElementById('batchRedeemIds').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
-                if (!ids.length) return alert('Enter position IDs');
-                showStatus('batchRedeemStatus', 'info', 'Redeeming...');
-                logActivity('Batch Redeem', 'sending...', 'info');
-                const tx = await contracts.redemption.redeemMultiple(ids);
-                logActivity('Batch Redeem', tx.hash, 'hash');
-                await tx.wait();
-                logActivity('Batch Redeem', 'confirmed', 'success');
-                showStatus('batchRedeemStatus', 'success', 'Redeemed!');
-                await loadUserData();
-            } catch (error) {
-                logActivity('Batch Redeem', 'failed', 'error');
-                showStatus('batchRedeemStatus', 'error', cleanError(error));
-            }
-        }
 
         let udLoading = false;
-        async function loadUsersDashboard() {
+        let udAllUserData = [];
+        let udDisplayedCount = 0;
+        let udTotalCount = 0;
+        const UD_PAGE_SIZE = 10;
+
+        async function loadUsersDashboard(limit) {
             if (udLoading) return;
             udLoading = true;
             showFetchLoader();
             const loadBtn = document.getElementById('udLoadBtn');
             const statusEl = document.getElementById('udLoadingStatus');
             const tbody = document.getElementById('udUserTableBody');
+            const loadMoreBtn = document.getElementById('udLoadMoreBtn');
             try {
                 loadBtn.disabled = true;
                 loadBtn.classList.add('loading');
+                loadMoreBtn.style.display = 'none';
                 statusEl.textContent = 'Fetching protocol stats...';
 
                 let pub = provider || cachedPublicProvider || _cachedDevRpcProvider;
@@ -2600,24 +2435,26 @@ contact@dmdprotocol.org </p>
                 document.getElementById('udTotalMinted').textContent = formatNumber(totalMinted) + ' DMD';
 
                 const count = totalUsers.toNumber();
+                udTotalCount = count;
                 if (count === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No users found</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No users found</td></tr>';
                     return;
                 }
 
-                statusEl.textContent = 'Loading ' + count + ' users...';
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading...</td></tr>';
+                const fetchCount = limit ? Math.min(limit, count) : count;
+                statusEl.textContent = 'Loading ' + fetchCount + ' of ' + count + ' users...';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading...</td></tr>';
 
                 const BATCH = 20;
                 const addresses = [];
-                for (let i = 0; i < count; i += BATCH) {
+                for (let i = 0; i < fetchCount; i += BATCH) {
                     const batch = [];
-                    for (let j = i; j < Math.min(i + BATCH, count); j++) {
+                    for (let j = i; j < Math.min(i + BATCH, fetchCount); j++) {
                         batch.push(contracts.vault.getUserByIndex(j));
                     }
                     const results = await Promise.all(batch);
                     addresses.push(...results);
-                    statusEl.textContent = 'Addresses: ' + addresses.length + '/' + count;
+                    statusEl.textContent = 'Addresses: ' + addresses.length + '/' + fetchCount;
                 }
 
                 statusEl.textContent = 'Loading user data...';
@@ -2647,69 +2484,23 @@ contact@dmdprotocol.org </p>
                     return 0;
                 });
 
-                let sumTbtc = ethers.BigNumber.from(0);
-                userData.forEach(u => { sumTbtc = sumTbtc.add(u.tbtcLocked); });
-
-                tbody.innerHTML = '';
-                userData.forEach((u, idx) => {
-                    const pct = !sumTbtc.isZero() ? (parseFloat(ethers.utils.formatEther(u.tbtcLocked)) / parseFloat(ethers.utils.formatEther(sumTbtc)) * 100) : 0;
-                    const shortAddr = u.address.slice(0, 6) + '...' + u.address.slice(-4);
-                    const row = document.createElement('tr');
-
-                    const tdRank = document.createElement('td');
-                    tdRank.className = 'ud-rank';
-                    tdRank.textContent = idx + 1;
-
-                    const tdAddr = document.createElement('td');
-                    tdAddr.style.fontFamily = "'JetBrains Mono', monospace";
-                    tdAddr.style.fontSize = '0.8rem';
-                    const addrText = document.createTextNode(shortAddr + ' ');
-                    tdAddr.appendChild(addrText);
-                    const copyBtn = document.createElement('button');
-                    copyBtn.className = 'copy-btn';
-                    copyBtn.textContent = 'Copy';
-                    copyBtn.addEventListener('click', function() { copyToClipboard(u.address, this); });
-                    tdAddr.appendChild(copyBtn);
-
-                    const tdTbtc = document.createElement('td');
-                    tdTbtc.style.fontFamily = "'JetBrains Mono', monospace";
-                    tdTbtc.textContent = formatBTC(u.tbtcLocked);
-
-                    const tdPct = document.createElement('td');
-                    const pctText = document.createElement('div');
-                    pctText.style.fontSize = '0.8rem';
-                    pctText.style.fontWeight = '600';
-                    pctText.textContent = pct.toFixed(2) + '%';
-                    tdPct.appendChild(pctText);
-                    const barContainer = document.createElement('div');
-                    barContainer.className = 'weight-bar-container';
-                    const barFill = document.createElement('div');
-                    barFill.className = 'weight-bar-fill';
-                    barFill.style.width = Math.min(pct, 100) + '%';
-                    barContainer.appendChild(barFill);
-                    tdPct.appendChild(barContainer);
-
-                    const tdScan = document.createElement('td');
-                    const scanLink = document.createElement('a');
-                    scanLink.href = 'https://basescan.org/address/' + u.address;
-                    scanLink.target = '_blank';
-                    scanLink.rel = 'noopener noreferrer';
-                    scanLink.className = 'address-link';
-                    scanLink.textContent = 'View';
-                    tdScan.appendChild(scanLink);
-
-                    row.appendChild(tdRank);
-                    row.appendChild(tdAddr);
-                    row.appendChild(tdTbtc);
-                    row.appendChild(tdPct);
-                    row.appendChild(tdScan);
-                    tbody.appendChild(row);
-                });
+                udAllUserData = userData;
+                udDisplayedCount = 0;
+                renderUdUsers(userData);
 
                 const totalPositions = userData.reduce((sum, u) => sum + u.positions, 0);
                 document.getElementById('udTotalPositions').textContent = totalPositions;
-                statusEl.textContent = 'Loaded ' + userData.length + ' users';
-                logActivity('Users Dashboard', 'loaded ' + userData.length + ' users', 'success');
+
+                if (fetchCount < count) {
+                    loadMoreBtn.style.display = 'inline-block';
+                    loadBtn.textContent = 'Reload Top 5';
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                    loadBtn.textContent = 'Reload All';
+                }
+
+                statusEl.textContent = 'Loaded ' + userData.length + ' of ' + count + ' users';
+                logActivity('Users Dashboard', 'loaded ' + userData.length + ' of ' + count + ' users', 'success');
             } catch (error) {
                 statusEl.textContent = 'Error: ' + cleanError(error);
                 logActivity('Users Dashboard', 'failed: ' + cleanError(error), 'error');
@@ -2721,7 +2512,157 @@ contact@dmdprotocol.org </p>
             }
         }
 
-        let walletSendHistory = [];
+        async function loadMoreUsers() {
+            if (udLoading) return;
+            udLoading = true;
+            showFetchLoader();
+            const loadMoreBtn = document.getElementById('udLoadMoreBtn');
+            const statusEl = document.getElementById('udLoadingStatus');
+            try {
+                loadMoreBtn.disabled = true;
+                loadMoreBtn.classList.add('loading');
+
+                let pub = provider || cachedPublicProvider || _cachedDevRpcProvider;
+                if (!pub) {
+                    pub = await devGetRpcProvider();
+                    if (!pub) throw new Error('No RPC available');
+                    cachedPublicProvider = pub;
+                }
+                if (!contracts.vault) initContracts(pub);
+
+                const alreadyLoaded = udAllUserData.length;
+                const remaining = udTotalCount - alreadyLoaded;
+                if (remaining <= 0) {
+                    loadMoreBtn.style.display = 'none';
+                    return;
+                }
+
+                const toLoad = Math.min(UD_PAGE_SIZE, remaining);
+                statusEl.textContent = 'Loading ' + toLoad + ' more users...';
+
+                const BATCH = 20;
+                const addresses = [];
+                for (let i = alreadyLoaded; i < alreadyLoaded + toLoad; i += BATCH) {
+                    const batch = [];
+                    for (let j = i; j < Math.min(i + BATCH, alreadyLoaded + toLoad); j++) {
+                        batch.push(contracts.vault.getUserByIndex(j));
+                    }
+                    const results = await Promise.all(batch);
+                    addresses.push(...results);
+                    statusEl.textContent = 'Addresses: ' + addresses.length + '/' + toLoad;
+                }
+
+                statusEl.textContent = 'Loading user data...';
+                const newUserData = [];
+                for (let i = 0; i < addresses.length; i += BATCH) {
+                    const batch = addresses.slice(i, Math.min(i + BATCH, addresses.length));
+                    const results = await Promise.all(batch.map(async (addr) => {
+                        const positions = await contracts.vault.getActivePositions(addr);
+                        let userTotalTBTC = ethers.BigNumber.from(0);
+                        if (positions.length > 0) {
+                            const posData = await Promise.all(
+                                positions.map(pid => contracts.vault.getPosition(addr, pid))
+                            );
+                            posData.forEach(pos => {
+                                userTotalTBTC = userTotalTBTC.add(pos.amount);
+                            });
+                        }
+                        return { address: addr, positions: positions.length, tbtcLocked: userTotalTBTC };
+                    }));
+                    newUserData.push(...results);
+                    statusEl.textContent = 'Users: ' + newUserData.length + '/' + toLoad;
+                }
+
+                udAllUserData.push(...newUserData);
+                udAllUserData.sort((a, b) => {
+                    if (a.tbtcLocked.gt(b.tbtcLocked)) return -1;
+                    if (a.tbtcLocked.lt(b.tbtcLocked)) return 1;
+                    return 0;
+                });
+
+                udDisplayedCount = 0;
+                renderUdUsers(udAllUserData);
+
+                const totalPositions = udAllUserData.reduce((sum, u) => sum + u.positions, 0);
+                document.getElementById('udTotalPositions').textContent = totalPositions;
+
+                const loaded = udAllUserData.length;
+                if (loaded >= udTotalCount) {
+                    loadMoreBtn.style.display = 'none';
+                    document.getElementById('udLoadBtn').textContent = 'Reload All';
+                }
+
+                statusEl.textContent = 'Loaded ' + loaded + ' of ' + udTotalCount + ' users';
+                logActivity('Users Dashboard', 'loaded ' + toLoad + ' more users (' + loaded + ' total)', 'success');
+            } catch (error) {
+                statusEl.textContent = 'Error: ' + cleanError(error);
+                logActivity('Users Dashboard', 'load more failed: ' + cleanError(error), 'error');
+            } finally {
+                udLoading = false;
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.classList.remove('loading');
+                hideFetchLoader();
+            }
+        }
+
+        function renderUdUsers(userData) {
+            const tbody = document.getElementById('udUserTableBody');
+            let sumTbtc = ethers.BigNumber.from(0);
+            userData.forEach(u => { sumTbtc = sumTbtc.add(u.tbtcLocked); });
+
+            tbody.innerHTML = '';
+            userData.forEach((u, idx) => {
+                const pct = !sumTbtc.isZero() ? (parseFloat(ethers.utils.formatEther(u.tbtcLocked)) / parseFloat(ethers.utils.formatEther(sumTbtc)) * 100) : 0;
+                const shortAddr = u.address.slice(0, 6) + '...' + u.address.slice(-4);
+                const row = document.createElement('tr');
+
+                const tdRank = document.createElement('td');
+                tdRank.className = 'ud-rank';
+                tdRank.textContent = idx + 1;
+
+                const tdAddr = document.createElement('td');
+                tdAddr.style.fontFamily = "'JetBrains Mono', monospace";
+                tdAddr.style.fontSize = '0.8rem';
+                tdAddr.textContent = shortAddr;
+
+                const tdTbtc = document.createElement('td');
+                tdTbtc.style.fontFamily = "'JetBrains Mono', monospace";
+                tdTbtc.textContent = formatBTC(u.tbtcLocked);
+
+                const tdPct = document.createElement('td');
+                const pctText = document.createElement('div');
+                pctText.style.fontSize = '0.75rem';
+                pctText.style.fontWeight = '600';
+                pctText.style.lineHeight = '1';
+                pctText.textContent = pct.toFixed(2) + '%';
+                tdPct.appendChild(pctText);
+                const barContainer = document.createElement('div');
+                barContainer.className = 'weight-bar-container';
+                const barFill = document.createElement('div');
+                barFill.className = 'weight-bar-fill';
+                barFill.style.width = Math.min(pct, 100) + '%';
+                barContainer.appendChild(barFill);
+                tdPct.appendChild(barContainer);
+
+                const tdScan = document.createElement('td');
+                const scanLink = document.createElement('a');
+                scanLink.href = 'https://basescan.org/address/' + u.address;
+                scanLink.target = '_blank';
+                scanLink.rel = 'noopener noreferrer';
+                scanLink.className = 'address-link';
+                scanLink.textContent = 'View';
+                tdScan.appendChild(scanLink);
+
+                row.appendChild(tdRank);
+                row.appendChild(tdAddr);
+                row.appendChild(tdTbtc);
+                row.appendChild(tdPct);
+                row.appendChild(tdScan);
+                tbody.appendChild(row);
+            });
+            udDisplayedCount = userData.length;
+        }
+
         let walletSendSessionCount = 0;
 
         function walletSendModeChanged() {
@@ -3585,6 +3526,16 @@ contact@dmdprotocol.org </p>
             logActivity('M-Gen', 'exported ' + generatedWallets.length + ' wallets to CSV', 'success');
         }
 
+        let refreshInterval;
+        function startDataRefresh() {
+            if (refreshInterval) clearInterval(refreshInterval);
+            refreshInterval = setInterval(() => { if (!document.hidden) loadPublicData(); }, 30000);
+        }
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) { if (refreshInterval) clearInterval(refreshInterval); }
+            else { loadPublicData(); startDataRefresh(); }
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById("multiLockPositions")?.addEventListener("input", e => {
                 if (e.target.classList.contains("multi-lock-amount")) updateMultiLockTotals();
@@ -3607,19 +3558,9 @@ contact@dmdprotocol.org </p>
 
             renderEarlyUnlockRequests();
             renderActivityHistory();
+            loadUsersDashboard(5);
+            init();
         });
-
-        let refreshInterval;
-        function startDataRefresh() {
-            if (refreshInterval) clearInterval(refreshInterval);
-            refreshInterval = setInterval(() => { if (!document.hidden) loadPublicData(); }, 30000);
-        }
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) { if (refreshInterval) clearInterval(refreshInterval); }
-            else { loadPublicData(); startDataRefresh(); }
-        });
-
-        document.addEventListener('DOMContentLoaded', init);
         startDataRefresh();
     </script>
 </body>
