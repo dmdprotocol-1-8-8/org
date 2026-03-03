@@ -1240,7 +1240,8 @@ contact@dmdprotocol.org </p>
                 'function isUnlocked(address user, uint256 positionId) view returns (bool)',
                 'function calculateWeight(uint256 amount, uint256 lockMonths) view returns (uint256)',
                 'function getTotalUsers() view returns (uint256)',
-                'function getUserByIndex(uint256 index) view returns (address)'
+                'function getUserByIndex(uint256 index) view returns (address)',
+                'function getEarlyUnlockStatus(address user, uint256 positionId) view returns (bool requested, uint256 readyTime, bool isReady)'
             ],
             EmissionScheduler: [
                 'function totalEmitted() view returns (uint256)',
@@ -1797,10 +1798,21 @@ contact@dmdprotocol.org </p>
                 document.getElementById('dashboardLockedTBTC').textContent = formatBTC(totalTBTC);
                 document.getElementById('userTotalBurned').textContent = formatNumber(userTotalBurned);
                 document.getElementById('userPositionCount').textContent = positions.length.toString();
-                renderEarlyUnlockRequests();
+
+                const earlyStatuses = {};
+                if (positionsData.length > 0) {
+                    const statuses = await Promise.all(positionsData.map(([, , posId]) =>
+                        contracts.vault.getEarlyUnlockStatus(userAddress, posId)
+                            .then(s => [posId, { requested: s.requested, readyTime: s.readyTime.toNumber(), isReady: s.isReady }])
+                            .catch(() => [posId, null])
+                    ));
+                    statuses.forEach(([posId, s]) => { earlyStatuses[posId] = s; });
+                }
+
+                renderEarlyUnlockRequests(earlyStatuses);
                 await Promise.all([
                     updateEmissionPositionsTable(positions, positionsData, totalWeight),
-                    updateRedemptionPositionsTable(positions, positionsData)
+                    updateRedemptionPositionsTable(positions, positionsData, earlyStatuses)
                 ]);
             } catch (error) {} finally { hideFetchLoader(); }
         }
@@ -2062,48 +2074,31 @@ contact@dmdprotocol.org </p>
         }
 
 
-        function getEarlyUnlockRequests() {
-            try { return JSON.parse(localStorage.getItem('earlyUnlockRequests')) || []; } catch { return []; }
-        }
-
-        function saveEarlyUnlockRequest(posId) {
-            const list = getEarlyUnlockRequests();
-            if (list.find(r => r.posId === String(posId))) return;
-            list.push({ posId: String(posId), requestedAt: Date.now(), availableAt: Date.now() + 30 * 86400000 });
-            localStorage.setItem('earlyUnlockRequests', JSON.stringify(list));
-        }
-
-        function removeEarlyUnlockRequest(posId) {
-            const filtered = getEarlyUnlockRequests().filter(r => r.posId !== String(posId));
-            localStorage.setItem('earlyUnlockRequests', JSON.stringify(filtered));
-            renderEarlyUnlockRequests();
-        }
-
         async function cancelEarlyUnlockRequest(posId) {
             try {
                 if (!signer) throw new Error('Connect wallet first');
-                showStatus('unlockStatus', 'info', 'Cancelling...');
-                logActivity('Cancel Unlock', 'sending...', 'info');
+                showStatus('redemptionPositionsStatus', 'info', 'Cancelling early unlock for #' + posId + '...');
+                logActivity('Cancel Unlock #' + posId, 'sending...', 'info');
                 const tx = await contracts.vault.cancelEarlyUnlock(posId);
-                logActivity('Cancel Unlock', tx.hash, 'hash');
+                logActivity('Cancel Unlock #' + posId, tx.hash, 'hash');
                 await tx.wait();
-                logActivity('Cancel Unlock', 'confirmed', 'success');
-                removeEarlyUnlockRequest(posId);
-                showStatus('unlockStatus', 'success', 'Cancelled');
+                logActivity('Cancel Unlock #' + posId, 'confirmed', 'success');
+                showStatus('redemptionPositionsStatus', 'success', 'Early unlock cancelled for #' + posId);
                 await loadUserData();
             } catch (e) {
-                logActivity('Cancel Unlock', 'failed', 'error');
-                showStatus('unlockStatus', 'error', e.message);
+                logActivity('Cancel Unlock #' + posId, 'failed', 'error');
+                showStatus('redemptionPositionsStatus', 'error', e.message);
             }
         }
 
-        async function renderEarlyUnlockRequests() {
-            const list = getEarlyUnlockRequests();
+        async function renderEarlyUnlockRequests(earlyStatuses) {
             const tbody = document.getElementById('earlyUnlockRequestsList');
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            if (!list?.length) {
+            const pendingList = Object.entries(earlyStatuses || {}).filter(([, s]) => s && s.requested);
+
+            if (!pendingList.length) {
                 const row = document.createElement('tr');
                 const cell = document.createElement('td');
                 cell.colSpan = 6;
@@ -2114,43 +2109,39 @@ contact@dmdprotocol.org </p>
                 return;
             }
 
-            const canFetchBurn = contracts?.redemption && userAddress;
             let burnMap = {};
-            if (canFetchBurn) {
+            if (contracts?.redemption && userAddress) {
                 try {
-                    const results = await Promise.all(list.map(r =>
-                        contracts.redemption.getRequiredBurn(userAddress, r.posId)
-                            .then(burn => [r.posId, burn])
-                            .catch(() => [r.posId, null])
+                    const results = await Promise.all(pendingList.map(([posId]) =>
+                        contracts.redemption.getRequiredBurn(userAddress, posId)
+                            .then(burn => [posId, burn])
+                            .catch(() => [posId, null])
                     ));
                     results.forEach(([posId, burn]) => { burnMap[posId] = burn; });
                 } catch { /* ignore */ }
             }
 
-            list.forEach(r => {
-                const sanitizedPosId = SecurityUtils.sanitizeInteger(r.posId);
-                if (sanitizedPosId === null) return;
-
-                const isAvailable = Date.now() >= r.availableAt;
+            pendingList.forEach(([posId, status]) => {
                 const row = document.createElement('tr');
 
                 const tdPosId = document.createElement('td');
-                tdPosId.textContent = sanitizedPosId;
+                tdPosId.textContent = posId;
 
                 const tdRequested = document.createElement('td');
-                tdRequested.textContent = new Date(r.requestedAt).toLocaleString();
+                const requestedAt = status.readyTime - 30 * 86400;
+                tdRequested.textContent = new Date(requestedAt * 1000).toLocaleString();
 
                 const tdAvailable = document.createElement('td');
-                tdAvailable.textContent = new Date(r.availableAt).toLocaleString();
+                tdAvailable.textContent = new Date(status.readyTime * 1000).toLocaleString();
 
                 const tdBurn = document.createElement('td');
                 tdBurn.style.fontFamily = "'JetBrains Mono', monospace";
                 tdBurn.style.fontSize = '0.8rem';
-                const burnVal = burnMap[r.posId];
+                const burnVal = burnMap[posId];
                 tdBurn.textContent = burnVal != null ? formatNumber(burnVal) : '-';
 
                 const tdStatus = document.createElement('td');
-                if (isAvailable) {
+                if (status.isReady) {
                     const span = document.createElement('span');
                     span.style.color = 'var(--success)';
                     span.textContent = 'Available';
@@ -2160,18 +2151,14 @@ contact@dmdprotocol.org </p>
                 }
 
                 const tdAction = document.createElement('td');
-                const btn = document.createElement('button');
-                btn.className = isAvailable ? 'btn btn-primary' : 'btn btn-secondary';
-                btn.style.cssText = 'padding:4px 8px;font-size:0.75rem';
-                btn.textContent = isAvailable ? 'Clear' : 'Cancel';
-                btn.addEventListener('click', () => {
-                    if (isAvailable) {
-                        removeEarlyUnlockRequest(sanitizedPosId);
-                    } else {
-                        cancelEarlyUnlockRequest(sanitizedPosId);
-                    }
-                });
-                tdAction.appendChild(btn);
+                if (!status.isReady) {
+                    const btn = document.createElement('button');
+                    btn.className = 'copy-btn';
+                    btn.style.color = '#f97316';
+                    btn.textContent = 'Cancel';
+                    btn.addEventListener('click', () => cancelEarlyUnlockRequest(posId));
+                    tdAction.appendChild(btn);
+                }
 
                 row.appendChild(tdPosId);
                 row.appendChild(tdRequested);
@@ -2237,14 +2224,13 @@ contact@dmdprotocol.org </p>
             }
         }
 
-        async function updateRedemptionPositionsTable(positions, positionsData) {
+        async function updateRedemptionPositionsTable(positions, positionsData, earlyStatuses) {
             const tbody = document.getElementById('redemptionPositionsList');
             if (!tbody) return;
             if (!positions?.length || !positionsData?.length) {
                 tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No active positions</td></tr>';
                 return;
             }
-            const earlyRequests = getEarlyUnlockRequests();
             try {
                 const burnData = await Promise.all(positionsData.map(([pos, isUnlocked, posId]) =>
                     Promise.all([
@@ -2258,11 +2244,10 @@ contact@dmdprotocol.org </p>
                 tbody.innerHTML = '';
                 burnData.forEach(([requiredBurn, redeemable, posId, pos, isUnlocked]) => {
                     const unlockDate = new Date(pos.unlockTime.toNumber() * 1000);
-                    const now = Date.now();
-                    const isExpired = now >= unlockDate.getTime();
-                    const earlyReq = earlyRequests.find(r => r.posId === String(posId));
-                    const hasEarlyReq = !!earlyReq;
-                    const earlyAvailable = hasEarlyReq && now >= earlyReq.availableAt;
+                    const isExpired = Date.now() >= unlockDate.getTime();
+                    const earlyStatus = earlyStatuses?.[posId];
+                    const hasEarlyReq = earlyStatus?.requested || false;
+                    const earlyAvailable = hasEarlyReq && earlyStatus.isReady;
 
                     const row = document.createElement('tr');
 
@@ -2299,12 +2284,7 @@ contact@dmdprotocol.org </p>
                     if (isUnlocked) {
                         tdEarly.innerHTML = '<span style="color:var(--text-muted)">-</span>';
                     } else if (hasEarlyReq && earlyAvailable) {
-                        const cancelBtn = document.createElement('button');
-                        cancelBtn.className = 'copy-btn';
-                        cancelBtn.textContent = 'Clear';
-                        cancelBtn.style.color = 'var(--success)';
-                        cancelBtn.addEventListener('click', () => removeEarlyUnlockRequest(posId));
-                        tdEarly.appendChild(cancelBtn);
+                        tdEarly.innerHTML = '<span style="color:var(--success); font-size:0.75rem">Ready</span>';
                     } else if (hasEarlyReq) {
                         const cancelBtn = document.createElement('button');
                         cancelBtn.className = 'copy-btn';
@@ -2389,7 +2369,6 @@ contact@dmdprotocol.org </p>
                 await tx.wait();
                 logActivity('Early Unlock #' + posId, 'confirmed', 'success');
                 showStatus('redemptionPositionsStatus', 'success', 'Early unlock requested for #' + posId);
-                saveEarlyUnlockRequest(posId);
                 await loadUserData();
             } catch (error) {
                 logActivity('Early Unlock #' + posId, 'failed', 'error');
