@@ -431,11 +431,143 @@
         }
         .ud-rank { color: var(--text-muted); font-size: 0.8rem; }
         @media (max-width: 768px) {
-            .container { padding: 0 16px; }
-            .header-content { flex-direction: column; text-align: center; }
-            .logo h1 { font-size: 1.5rem; }
+            /* Base layout */
+            .container { padding: 0 10px; }
+
+            /* Header: stack vertically */
+            .header-content { flex-direction: column; text-align: center; gap: 6px; }
+            .logo h1 { font-size: 1.3rem; }
+            .logo span { font-size: 0.72rem; display: block; line-height: 1.2; }
+            .connect-btn { width: 100%; }
+            .wallet-info { flex-wrap: wrap; justify-content: center; font-size: 0.8rem; }
+            .wallet-address { font-size: 0.75rem; word-break: break-all; }
+
+            /* Tabs: wrap to multiple rows, balance panel below */
+            .tabs { flex-wrap: wrap; gap: 3px; }
+            .tab { padding: 7px 10px; font-size: 0.78rem; }
+            .balance-panel {
+                margin-left: 0 !important;
+                width: 100%;
+                justify-content: center !important;
+                padding: 4px 10px !important;
+                border-top: 1px solid var(--border);
+                margin-top: 2px;
+                gap: 10px !important;
+                font-size: 0.72rem;
+            }
+
+            /* Activity log: single column */
+            #activityLogEntries { grid-template-columns: 1fr !important; }
+
+            /* Stat grid: single column */
             .stat-grid { grid-template-columns: 1fr; }
-            .tab { padding: 10px 16px; font-size: 0.875rem; }
+
+            /* Cards: scrollable for wide tables */
+            .card { padding: 6px 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .card h3 { font-size: 0.95rem; }
+            .card:hover { transform: none; }
+
+            /* Tables: maintain readable width, parent scrolls */
+            table { min-width: 480px; }
+
+            /* Vault tab: simple positions table fits without forced min-width */
+            #vault table { min-width: 0; }
+
+            /* Vault tab: multi-lock rows — let inputs wrap on narrow screens */
+            .multi-lock-row {
+                flex-wrap: wrap !important;
+            }
+            .multi-lock-row > div {
+                flex: 1 1 calc(50% - 24px) !important;
+                min-width: 90px;
+            }
+            .multi-lock-row > button {
+                flex: 0 0 32px !important;
+            }
+
+            /* Vault tab: Approve → Lock button pairs */
+            .vault-action-row {
+                flex-wrap: wrap !important;
+            }
+            .vault-action-row .btn {
+                flex: 1 1 40%;
+                min-width: 100px;
+            }
+            .vault-action-arrow { display: none !important; }
+
+            /* Buttons: larger tap targets, no hover transform */
+            .btn { padding: 10px 14px; font-size: 0.85rem; -webkit-tap-highlight-color: transparent; }
+            .btn:hover { transform: none; }
+
+            /* Devtool: stack panels vertically */
+            .devtool-layout { flex-direction: column !important; }
+            .devtool-layout > div { flex: unset !important; width: 100% !important; }
+
+            /* Emission action buttons: full width row */
+            .emission-actions {
+                margin-left: 0 !important;
+                width: 100%;
+                flex-wrap: wrap;
+            }
+            .emission-actions .btn {
+                flex: 1;
+                min-width: 120px;
+                white-space: nowrap;
+            }
+
+            /* Footer: stack items */
+            .footer-content { padding: 0 10px; }
+            .footer-bottom { flex-direction: column; gap: 8px; align-items: center !important; text-align: center; }
+            .footer-disclosure { padding: 8px 10px; }
+            .footer-disclosure-text { font-size: 0.75rem; }
+
+            /* Wallet connect modal */
+            .wallet-list { grid-template-columns: repeat(3, 1fr); }
+            .wallet-modal { width: 95%; padding: 10px; }
+
+            /* Lock confirmation modals */
+            .modal { width: 95%; max-width: none; }
+
+            /* Disable hover transforms on touch devices */
+            .resource-link:hover { transform: none; }
+            .tab:hover { transform: none; }
+
+            /* Copy button: easier to tap */
+            .copy-btn { padding: 5px 10px; font-size: 0.8rem; }
+
+            /* Filter buttons: wrap */
+            .filter-btn { padding: 6px 10px; font-size: 0.75rem; }
+
+            /* Form inputs: comfortable touch targets */
+            .form-group input, .form-group select { font-size: 16px; padding: 10px; }
+        }
+
+        @media (max-width: 420px) {
+            .container { padding: 0 8px; }
+            .logo h1 { font-size: 1.1rem; }
+            .tab { padding: 5px 8px; font-size: 0.72rem; gap: 3px; }
+            .tab span { font-size: 0.7rem; }
+            .wallet-list { grid-template-columns: repeat(2, 1fr); }
+            .balance-panel { gap: 6px !important; font-size: 0.68rem; }
+            .card h3 { font-size: 0.88rem; }
+            .stat-value { font-size: 0.95rem; }
+            .footer-copyright { font-size: 0.7rem; }
+            .info-box p { font-size: 0.72rem; }
+            .address-link { font-size: 0.75rem; }
+
+            /* Vault tab: multi-lock inputs stack fully at narrow widths */
+            .multi-lock-row > div {
+                flex: 1 1 100% !important;
+                min-width: 0 !important;
+            }
+            .multi-lock-row > button {
+                align-self: flex-end;
+            }
+
+            /* Vault tab: action buttons full width */
+            .vault-action-row .btn {
+                flex: 1 1 100% !important;
+            }
         }</style>
 </head>
 <body>
@@ -464,12 +596,12 @@
     <div class="container">
         <div class="tabs" style="align-items: center;">
             <button class="tab active" onclick="showTab('dashboard')"><span>▣</span> Overview</button>
-            <button class="tab" onclick="showTab('vault')"><span>◈</span> BTC Vault</button>
+            <button class="tab" onclick="showTab('vault')"><span>◈</span> tBTC Vault</button>
             <button class="tab" onclick="showTab('emissions')"><span>◇</span> Emissions</button>
             <button class="tab" onclick="showTab('history')"><span>▤</span> Activity</button>
             <button class="tab" onclick="showTab('redemption')"><span>↻</span> Redemption</button>
             <button class="tab" onclick="showTab('aboutus')"><span>◉</span> About Us</button>
-            <div style="margin-left: auto; display: flex; align-items: center; gap: 16px; padding: 5px 14px; white-space: nowrap;">
+            <div class="balance-panel" style="margin-left: auto; display: flex; align-items: center; gap: 16px; padding: 5px 14px; white-space: nowrap;">
                 <div style="display: flex; align-items: center; gap: 5px;">
                     <span style="color: var(--text-muted); font-size: 0.75rem;">ETH</span>
                     <span id="panelEthBalance" style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text); font-weight: 600;">-</span>
@@ -635,9 +767,9 @@
                             <input type="number" id="lockMonths" placeholder="60" min="1" max="60" value="60">
                             <small style="color: var(--text-muted);">Enter 1-60 months</small>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                        <div class="vault-action-row" style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
                             <button class="btn btn-secondary" id="approveTBTCBtn" onclick="approveTBTC()" style="margin-top: 0;">Approve</button>
-                            <span style="color: #3b82f6; font-size: 1.2rem;">🢂</span>
+                            <span class="vault-action-arrow" style="color: #3b82f6; font-size: 1.2rem;">🢂</span>
                             <button class="btn btn-primary" id="lockTBTCBtn" onclick="lockTBTC()" style="margin-top: 0;">Lock</button>
                         </div>
                         <div id="lockStatus" class="status hidden"></div>
@@ -694,9 +826,9 @@
                         </div>
                     </div>
                     <div id="multiLockStatus" class="status hidden"></div>
-                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                    <div class="vault-action-row" style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
                         <button class="btn btn-secondary" id="approveMultiTBTCBtn" onclick="approveMultipleTBTC()" style="margin-top: 0;">Approve</button>
-                        <span style="color: #3b82f6; font-size: 1.2rem;">🢂</span>
+                        <span class="vault-action-arrow" style="color: #3b82f6; font-size: 1.2rem;">🢂</span>
                         <button class="btn btn-primary" id="lockMultipleTBTCBtn" onclick="lockMultipleTBTC()" style="margin-top: 0;">Lock</button>
                     </div>
                 </div>
@@ -717,7 +849,7 @@
                 <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">Weight:</span><span id="emissionTotalWeight" style="font-weight: 600; color: var(--text);">-</span></div>
                 <div id="claimableHighlight" style="display: flex; align-items: center; gap: 5px; background: rgba(59, 130, 246, 0.15); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(59, 130, 246, 0.3);"><span style="color: var(--text-muted);">Total Claimable:</span><span id="emissionTotalClaimable" style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #60a5fa;">-</span></div>
                 <div style="display: flex; align-items: center; gap: 4px;"><span style="color: var(--text-muted);">Epochs:</span><span id="epochsToClaimCount" style="font-weight: 600; color: var(--text);">-</span></div>
-                <div style="display: flex; align-items: center; gap: 6px; margin-left: auto;">
+                <div class="emission-actions" style="display: flex; align-items: center; gap: 6px; margin-left: auto;">
                     <button class="btn btn-primary" onclick="finalizeMultipleEpochs()" style="padding: 8px 18px; font-size: 0.82rem; border-radius: 6px; font-weight: 600; white-space: nowrap;">Finalize Epochs</button>
                     <button class="btn btn-primary" onclick="claimAllDMD()" style="padding: 8px 18px; font-size: 0.82rem; border-radius: 6px; font-weight: 600; white-space: nowrap;">Claim All DMD</button>
                 </div>
@@ -919,7 +1051,7 @@
         </div>
 
         <div id="devtool" class="tab-content">
-          <div style="display: flex; gap: 12px; align-items: flex-start;">
+          <div class="devtool-layout" style="display: flex; gap: 12px; align-items: flex-start;">
           <div style="flex: 1; min-width: 0;">
             <div class="card">
                 <h3>Dev: Auto Lock tBTC (Multi-Wallet)</h3>
